@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoveBot - Your AI Movement Instructor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #fafafa; color: #1a1a1a; min-height: 100vh; }
+
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 40px; background: #fff; border-bottom: 1px solid #eee;
+    }
+    .logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo span { color: #e53e3e; }
+    .nav-links { display: flex; gap: 28px; font-size: 14px; font-weight: 500; color: #999; }
+    .nav-links a { text-decoration: none; color: inherit; cursor: pointer; transition: color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color: #1a1a1a; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .hero { text-align: center; padding: 48px 40px 16px; }
+    .hero h1 { font-size: 42px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 12px; }
+    .hero p { font-size: 15px; color: #777; max-width: 520px; margin: 0 auto; line-height: 1.6; }
+    .hero .tagline {
+      display: inline-block; margin-top: 16px; padding: 6px 16px; border-radius: 100px;
+      background: #fef2f2; color: #e53e3e; font-size: 12px; font-weight: 600;
+    }
+
+    /* Discipline Grid */
+    .disciplines {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px; padding: 32px 40px 60px; max-width: 1060px; margin: 0 auto;
+    }
+    .disc-card {
+      background: #fff; border-radius: 16px; padding: 32px 28px; cursor: pointer;
+      transition: all 0.25s; border: 2px solid transparent; text-align: center;
+    }
+    .disc-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.07); }
+    .disc-card:hover .disc-icon { transform: scale(1.1); }
+    .disc-card .disc-icon {
+      font-size: 48px; margin-bottom: 16px; display: block; transition: transform 0.2s;
+    }
+    .disc-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.3px; }
+    .disc-card .disc-sub { font-size: 13px; color: #999; margin-bottom: 12px; }
+    .disc-card .disc-tag {
+      display: inline-block; padding: 3px 10px; border-radius: 100px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+    }
+    .disc-card:nth-child(1) { border-color: #fef2f2; }
+    .disc-card:nth-child(1):hover { border-color: #e53e3e; }
+    .disc-card:nth-child(1) .disc-tag { background: #fef2f2; color: #e53e3e; }
+    .disc-card:nth-child(2) { border-color: #f3e8ff; }
+    .disc-card:nth-child(2):hover { border-color: #7c3aed; }
+    .disc-card:nth-child(2) .disc-tag { background: #f3e8ff; color: #7c3aed; }
+    .disc-card:nth-child(3) { border-color: #ecfdf5; }
+    .disc-card:nth-child(3):hover { border-color: #059669; }
+    .disc-card:nth-child(3) .disc-tag { background: #ecfdf5; color: #059669; }
+    .disc-card:nth-child(4) { border-color: #eff6ff; }
+    .disc-card:nth-child(4):hover { border-color: #2563eb; }
+    .disc-card:nth-child(4) .disc-tag { background: #eff6ff; color: #2563eb; }
+
+    /* Detail Page */
+    .detail-wrap { max-width: 1100px; margin: 0 auto; padding: 0 40px 60px; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 13px;
+      color: #999; cursor: pointer; margin-bottom: 20px; font-weight: 500;
+    }
+    .back-btn:hover { color: #333; }
+    .detail-head { margin-bottom: 28px; }
+    .detail-head h2 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 4px; }
+    .detail-head .dsub { font-size: 15px; color: #e53e3e; margin-bottom: 12px; font-weight: 500; }
+    .detail-head p { font-size: 14px; color: #666; line-height: 1.7; max-width: 600px; }
+
+    .sim-box {
+      background: #111; border-radius: 16px; overflow: hidden;
+      margin-bottom: 12px; aspect-ratio: 4/3; position: relative;
+    }
+    .sim-box iframe { width: 100%; height: 100%; border: none; }
+    .sim-box .fs-btn {
+      position:absolute; top:12px; right:12px; z-index:10; width:36px; height:36px;
+      border-radius:10px; background:rgba(0,0,0,0.6); border:none; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; transition:background 0.2s;
+    }
+    .sim-box .fs-btn:hover { background:rgba(0,0,0,0.8); }
+    .sim-box .fs-btn svg { width:18px; height:18px; fill:#fff; }
+    .sim-box.fullscreen {
+      position:fixed; inset:0; z-index:2000; border-radius:0;
+      aspect-ratio:auto; margin:0; width:100vw; height:100vh;
+    }
+    .sim-box.fullscreen .fs-btn { top:20px; right:20px; width:44px; height:44px; border-radius:12px; }
+    .sim-box.fullscreen .fs-btn svg { width:22px; height:22px; }
+    .sim-empty {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100%; color: #555; gap: 12px;
+    }
+    .play-btn {
+      width: 64px; height: 64px; border-radius: 50%; background: rgba(229,62,62,0.15);
+      display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;
+    }
+    .play-btn:hover { background: rgba(229,62,62,0.3); transform: scale(1.05); }
+    .play-btn svg { width: 24px; height: 24px; fill: #e53e3e; margin-left: 3px; }
+    .sim-empty p { font-size: 13px; }
+    .sim-empty .hint { font-size: 11px; color: #444; }
+
+    .train-bar {
+      display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+      background: #f5f5f5; border-radius: 10px; margin-bottom: 28px; font-size: 12px; color: #888;
+    }
+    .train-bar .dot { width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; animation: blink 1.5s infinite; }
+    .train-bar .dot.done { background: #22c55e; animation: none; }
+    @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+    .train-bar .bar { flex:1; height:3px; background:#e0e0e0; border-radius:2px; overflow:hidden; }
+    .train-bar .bar-fill { height:100%; background:#e53e3e; border-radius:2px; transition:width 0.5s; }
+    .deploy-btn { display:none; padding:5px 14px; background:#e53e3e; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; letter-spacing:0.5px; transition:background 0.2s; }
+    .deploy-btn:hover { background:#c53030; }
+    .deploy-btn.show { display:inline-flex; animation:fadeIn 0.4s; }
+    @keyframes fadeIn { from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)} }
+
+    .sec-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #bbb; margin-bottom: 12px; font-weight: 700; }
+    .moves-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 28px; }
+    .move-item {
+      display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+      background: #fff; border-radius: 10px; font-size: 13px; font-weight: 500;
+    }
+    .move-item .num {
+      width: 24px; height: 24px; border-radius: 6px; background: #fef2f2; color: #e53e3e;
+      display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+    .notes-box { background: #fff; border-radius: 14px; padding: 20px; }
+    .notes-box p { font-size: 13px; line-height: 1.7; color: #666; }
+
+    /* Quiz */
+    .quiz-wrap { max-width: 600px; margin: 0 auto; padding: 0 40px 60px; }
+    .q-pips { display: flex; gap: 5px; margin-bottom: 32px; }
+    .q-pip { flex:1; height:3px; border-radius:2px; background:#e0e0e0; }
+    .q-pip.done { background:#e53e3e; } .q-pip.now { background:#fca5a5; }
+    .q-text { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.4; margin-bottom: 24px; }
+    .q-opt {
+      display: flex; align-items: center; gap: 14px; padding: 14px 18px;
+      background: #fff; border: 2px solid #eee; border-radius: 12px;
+      margin-bottom: 10px; cursor: pointer; transition: all 0.2s; font-size: 14px; font-weight: 500;
+    }
+    .q-opt:hover { border-color: #ccc; }
+    .q-opt .ltr {
+      width: 28px; height: 28px; border-radius: 8px; background: #f5f5f5;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #999; flex-shrink: 0;
+    }
+    .q-opt.correct { border-color: #22c55e; background: #f0fdf4; }
+    .q-opt.correct .ltr { background: #22c55e; color: #fff; }
+    .q-opt.wrong { border-color: #ef4444; background: #fef2f2; }
+    .q-opt.wrong .ltr { background: #ef4444; color: #fff; }
+    .q-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; }
+    .q-foot button { padding: 8px 20px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-s { background: #f0f0f0; color: #666; } .btn-s:hover { background: #e8e8e8; }
+    .btn-p { background: #e53e3e; color: #fff; } .btn-p:hover { background: #dc2626; }
+    .q-score { font-size: 13px; color: #bbb; font-weight: 600; }
+
+    /* Add Move Modal */
+    .modal-overlay {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000;
+      align-items:center; justify-content:center;
+    }
+    .modal-overlay.open { display:flex; }
+    .modal {
+      background:#fff; border-radius:20px; padding:32px; max-width:480px; width:90%;
+      position:relative;
+    }
+    .modal h3 { font-size:20px; font-weight:700; margin-bottom:4px; }
+    .modal .modal-sub { font-size:13px; color:#888; margin-bottom:24px; line-height:1.5; }
+    .modal-close {
+      position:absolute; top:16px; right:16px; width:32px; height:32px; border-radius:8px;
+      border:none; background:#f5f5f5; cursor:pointer; font-size:16px; display:flex;
+      align-items:center; justify-content:center; color:#999;
+    }
+    .modal-close:hover { background:#eee; color:#333; }
+    .modal-option {
+      display:flex; align-items:center; gap:16px; padding:18px 20px;
+      border:2px solid #eee; border-radius:14px; margin-bottom:12px;
+      cursor:pointer; transition:all 0.2s;
+    }
+    .modal-option:hover { border-color:#e53e3e; background:#fff5f5; }
+    .modal-option .mo-icon {
+      width:48px; height:48px; border-radius:12px; background:#fef2f2;
+      display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;
+    }
+    .modal-option h4 { font-size:15px; font-weight:600; margin-bottom:2px; }
+    .modal-option p { font-size:12px; color:#888; line-height:1.4; }
+    .add-move-card {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      border:2px dashed #ddd; border-radius:14px; padding:24px; cursor:pointer;
+      transition:all 0.2s; min-height:140px;
+    }
+    .add-move-card:hover { border-color:#e53e3e; background:#fff5f5; }
+    .add-move-card .add-icon {
+      width:40px; height:40px; border-radius:50%; background:#fef2f2; color:#e53e3e;
+      display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700;
+      margin-bottom:8px;
+    }
+    .add-move-card span { font-size:13px; font-weight:600; color:#999; }
+    .upload-state { text-align:center; padding:20px 0; }
+    .upload-state .drop-zone {
+      border:2px dashed #ddd; border-radius:14px; padding:40px 20px; margin-bottom:16px;
+      cursor:pointer; transition:all 0.2s;
+    }
+    .upload-state .drop-zone:hover { border-color:#e53e3e; background:#fff5f5; }
+    .upload-state .drop-zone p { font-size:13px; color:#888; margin-top:8px; }
+    .upload-state .drop-zone .up-icon { font-size:32px; margin-bottom:4px; }
+    .record-state { text-align:center; }
+    .record-state video { width:100%; border-radius:12px; background:#000; margin-bottom:12px; }
+    .record-btn {
+      width:56px; height:56px; border-radius:50%; border:4px solid #e53e3e; background:#fff;
+      cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:all 0.2s;
+    }
+    .record-btn .rec-dot { width:24px; height:24px; border-radius:50%; background:#e53e3e; transition:all 0.2s; }
+    .record-btn.recording .rec-dot { border-radius:4px; width:18px; height:18px; }
+    .record-hint { font-size:12px; color:#888; margin-top:8px; }
+    .training-toast {
+      display:none; position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+      background:#1a1a1a; color:#fff; padding:14px 24px; border-radius:12px;
+      font-size:13px; font-weight:500; z-index:1001; align-items:center; gap:10px;
+    }
+    .training-toast.show { display:flex; }
+    .training-toast .toast-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; animation:blink 1.5s infinite; }
+
+    /* Connect Bot */
+    .connect-wrap { max-width: 660px; margin: 0 auto; padding: 0 40px 60px; }
+    .connect-card {
+      background: #fff; border-radius: 20px; padding: 36px; margin-bottom: 20px;
+      border: 2px solid #eee; transition: all 0.3s;
+    }
+    .connect-card.connected { border-color: #22c55e; background: #fafff9; }
+    .connect-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.3px; }
+    .connect-card .csub { font-size: 13px; color: #888; line-height: 1.6; margin-bottom: 20px; }
+    .connect-form { display: flex; flex-direction: column; gap: 12px; }
+    .connect-form label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #aaa; }
+    .connect-form input, .connect-form select {
+      padding: 12px 16px; border: 2px solid #eee; border-radius: 12px; font-size: 14px;
+      font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s;
+    }
+    .connect-form input:focus, .connect-form select:focus { border-color: #e53e3e; }
+    .connect-btn {
+      padding: 12px 24px; border: none; border-radius: 12px; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;
+    }
+    .connect-btn.primary { background: #e53e3e; color: #fff; }
+    .connect-btn.primary:hover { background: #dc2626; }
+    .connect-btn.disconnect { background: #f5f5f5; color: #666; }
+    .connect-btn.disconnect:hover { background: #eee; }
+    .bot-status {
+      display: flex; align-items: center; gap: 10px; padding: 14px 18px;
+      background: #f9fafb; border-radius: 12px; font-size: 13px; margin-bottom: 16px;
+    }
+    .bot-status .status-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .bot-status .status-dot.offline { background: #ddd; }
+    .bot-status .status-dot.connecting { background: #f59e0b; animation: blink 1.5s infinite; }
+    .bot-status .status-dot.online { background: #22c55e; }
+    .bot-status .status-text { font-weight: 600; }
+    .bot-status .status-detail { color: #999; font-size: 12px; }
+    .bot-info-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px;
+    }
+    .bot-info-item {
+      background: #f9fafb; border-radius: 10px; padding: 14px 16px;
+    }
+    .bot-info-item .bi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #bbb; font-weight: 700; margin-bottom: 4px; }
+    .bot-info-item .bi-value { font-size: 15px; font-weight: 700; color: #1a1a1a; }
+
+    /* Pipeline */
+    .pipe-wrap { max-width: 660px; margin: 0 auto; padding: 0 40px 60px; }
+    .pipe-step { display: flex; gap: 16px; margin-bottom: 6px; position: relative; }
+    .pipe-step::before { content:''; position:absolute; left:17px; top:44px; bottom:-6px; width:2px; background:#eee; }
+    .pipe-step:last-child::before { display: none; }
+    .pipe-dot {
+      width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center;
+      justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; z-index: 1;
+    }
+    .pipe-dot.done { background: #dcfce7; color: #166534; }
+    .pipe-dot.act { background: #fef3c7; color: #92400e; }
+    .pipe-dot.wait { background: #f5f5f5; color: #999; }
+    .pipe-info { padding-bottom: 20px; }
+    .pipe-info h4 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .pipe-info p { font-size: 12px; color: #888; line-height: 1.5; }
+
+    @media (max-width: 768px) {
+      .disciplines { grid-template-columns: 1fr 1fr; padding: 24px 20px 40px; }
+      .hero h1 { font-size: 28px; }
+      .moves-grid { grid-template-columns: 1fr; }
+      nav { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Move<span>Bot</span></div>
+  <div class="nav-links">
+    <a class="active" onclick="showPage('learn')">Learn</a>
+    <a onclick="showPage('pipeline')">How it Works</a>
+    <a onclick="showPage('connect')">Connect Your Bot</a>
+  </div>
+</nav>
+
+<div class="page active" id="page-learn">
+  <div class="hero" id="hero">
+    <h1>Your Personal<br>Movement Instructor</h1>
+    <p>Pick a discipline. An AI-trained robot shows you every move, step by step. No teacher needed.</p>
+    <div class="tagline">Powered by Video-to-Robot AI on Nebius Cloud</div>
+  </div>
+
+  <div class="disciplines" id="disc-grid">
+    <div class="disc-card" onclick="openDisc(0)">
+      <span class="disc-icon">&#129354;</span>
+      <h3>Karate</h3>
+      <div class="disc-sub">Basic Kata</div>
+      <span class="disc-tag">6 moves</span>
+    </div>
+    <div class="disc-card" onclick="openDisc(1)">
+      <span class="disc-icon">&#129676;</span>
+      <h3>Ballet</h3>
+      <div class="disc-sub">Basics</div>
+      <span class="disc-tag">4 moves</span>
+    </div>
+    <div class="disc-card" onclick="openDisc(2)">
+      <span class="disc-icon">&#127947;</span>
+      <h3>Calisthenics</h3>
+      <div class="disc-sub">Basic Workout</div>
+      <span class="disc-tag">5 moves</span>
+    </div>
+    <div class="disc-card" onclick="openDisc(3)">
+      <span class="disc-icon">&#129496;</span>
+      <h3>Yoga</h3>
+      <div class="disc-sub">Basic Stretches</div>
+      <span class="disc-tag">5 moves</span>
+    </div>
+    <div class="disc-card" onclick="openDisc(4)" style="border-color:#dcfce7;">
+      <span style="position:absolute;top:16px;right:16px;background:#22c55e;color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:100px;letter-spacing:0.5px;">LIVE</span>
+      <span class="disc-icon">&#128131;</span>
+      <h3>Creative Dance</h3>
+      <div class="disc-sub">Community Routines</div>
+      <span class="disc-tag">1 routine</span>
+    </div>
+  </div>
+
+  <!-- Move list within a discipline -->
+  <div class="detail-wrap" id="disc-detail" style="display:none;">
+    <div class="back-btn" onclick="backToDiscs()">&larr; All Disciplines</div>
+    <div class="detail-head">
+      <h2 id="disc-title"></h2>
+      <div class="dsub" id="disc-subtitle"></div>
+      <p id="disc-desc"></p>
+    </div>
+    <div class="card-grid-inner" id="move-list" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;"></div>
+  </div>
+
+  <!-- Single move detail -->
+  <div class="detail-wrap" id="move-detail" style="display:none;">
+    <div class="back-btn" onclick="backToMoves()">&larr; Back</div>
+    <div class="detail-head">
+      <h2 id="m-name"></h2>
+      <div class="dsub" id="m-sub"></div>
+      <p id="m-desc"></p>
+    </div>
+    <div style="display:flex;gap:20px;margin-bottom:20px;">
+      <div style="flex:1;min-width:0;">
+        <div class="sim-box" id="sim-box">
+          <button class="fs-btn" onclick="toggleFullscreen()" title="Fullscreen">
+            <svg id="fs-icon-expand" viewBox="0 0 24 24"><path d="M3 3h6v2H5v4H3V3zm12 0h6v6h-2V5h-4V3zM3 15h2v4h4v2H3v-6zm16 0h2v6h-6v-2h4v-4z"/></svg>
+            <svg id="fs-icon-shrink" viewBox="0 0 24 24" style="display:none;"><path d="M9 3v6H3V7h4V3h2zm6 0h2v4h4v2h-6V3zM3 15h6v6H7v-4H3v-2zm12 0h6v2h-4v4h-2v-6z"/></svg>
+          </button>
+          <div class="sim-empty" id="sim-empty">
+            <img src="get-moving.png" alt="Get Moving!" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+        </div>
+        <div class="train-bar">
+          <div class="dot" id="t-dot"></div>
+          <span id="t-text">Training...</span>
+          <div class="bar"><div class="bar-fill" id="t-fill" style="width:0%"></div></div>
+          <span id="t-pct">0%</span>
+          <button class="deploy-btn" id="deploy-btn" onclick="deploySim()">Deploy to Sim &#9654;</button>
+        </div>
+      </div>
+      <div id="m-tips-box" style="flex:1;min-width:0;background:#fff5f5;border-radius:14px;padding:20px;max-height:460px;overflow-y:auto;">
+        <div class="sec-title" style="color:#e53e3e;">Try It Yourself</div>
+        <p id="m-tips" style="font-size:13px; line-height:1.7; color:#444;"></p>
+      </div>
+    </div>
+    <div class="sec-title">Key Movements</div>
+    <div class="moves-grid" id="m-moves"></div>
+    <div class="notes-box">
+      <div class="sec-title">Robot Notes</div>
+      <p id="m-notes"></p>
+    </div>
+  </div>
+</div>
+
+
+<div class="page" id="page-pipeline">
+  <div class="hero"><h1>How It Works</h1><p>Upload a video. Get a robot instructor that teaches you the moves.</p></div>
+  <div class="pipe-wrap">
+    <div class="pipe-step"><div class="pipe-dot done">1</div><div class="pipe-info"><h4>Find a Video</h4><p>Pick any video of someone dancing, doing yoga, martial arts — anything. YouTube, TikTok, your own recordings all work.</p></div></div>
+    <div class="pipe-step"><div class="pipe-dot done">2</div><div class="pipe-info"><h4>Upload It</h4><p>Drop the video into MoveBot. That's all you need to do — we handle the rest.</p></div></div>
+    <div class="pipe-step"><div class="pipe-dot done">3</div><div class="pipe-info"><h4>We Learn the Moves</h4><p>MoveBot watches the video, figures out every body movement, and teaches them to your Unitree G1 robot.</p></div></div>
+    <div class="pipe-step"><div class="pipe-dot act">4</div><div class="pipe-info"><h4>The Robot Practices</h4><p>Your robot rehearses the moves thousands of times until it can perform them perfectly.</p></div></div>
+    <div class="pipe-step"><div class="pipe-dot wait">5</div><div class="pipe-info"><h4>Your New Instructor is Ready</h4><p>The robot performs the moves and teaches them to you step by step. We'll also find related moves to build a full lesson — your personal instructor keeps growing.</p></div></div>
+  </div>
+</div>
+
+<div class="page" id="page-connect">
+  <div class="hero">
+    <h1>Get Physical</h1>
+    <p>Connect your real Unitree G1 robot and deploy trained moves straight from the sim to the real world.</p>
+    <div class="tagline">Sim-to-Real Transfer</div>
+  </div>
+  <div class="connect-wrap">
+
+    <!-- Connection Status -->
+    <div class="connect-card" id="bot-connect-card">
+      <h3 id="connect-title">Connect Your Robot</h3>
+      <div class="csub" id="connect-sub">Enter your Unitree G1's network address to establish a connection. Make sure your robot is powered on and on the same network.</div>
+
+      <div class="bot-status" id="bot-status-bar">
+        <div class="status-dot offline" id="bot-status-dot"></div>
+        <div>
+          <div class="status-text" id="bot-status-text">No robot connected</div>
+          <div class="status-detail" id="bot-status-detail">Enter connection details below</div>
+        </div>
+      </div>
+
+      <!-- Connect Form -->
+      <div class="connect-form" id="bot-connect-form">
+        <div>
+          <label>Robot IP Address</label>
+          <input type="text" id="bot-ip" placeholder="192.168.1.100" value="">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <label>Port</label>
+            <input type="text" id="bot-port" placeholder="8080" value="8080">
+          </div>
+          <div>
+            <label>Protocol</label>
+            <select id="bot-protocol">
+              <option value="ws">WebSocket (WS)</option>
+              <option value="wss">WebSocket Secure (WSS)</option>
+              <option value="http">HTTP</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label>Robot Name (optional)</label>
+          <input type="text" id="bot-name" placeholder="My G1">
+        </div>
+        <button class="connect-btn primary" onclick="connectBot()">Connect Robot</button>
+      </div>
+
+      <!-- Connected State (hidden by default) -->
+      <div id="bot-connected-state" style="display:none;">
+        <div class="bot-info-grid">
+          <div class="bot-info-item">
+            <div class="bi-label">Robot</div>
+            <div class="bi-value" id="bi-name">My G1</div>
+          </div>
+          <div class="bot-info-item">
+            <div class="bi-label">Address</div>
+            <div class="bi-value" id="bi-address">—</div>
+          </div>
+          <div class="bot-info-item">
+            <div class="bi-label">Latency</div>
+            <div class="bi-value" id="bi-latency">— ms</div>
+          </div>
+          <div class="bot-info-item">
+            <div class="bi-label">Battery</div>
+            <div class="bi-value" id="bi-battery">—%</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button class="connect-btn disconnect" onclick="disconnectBot()">Disconnect</button>
+          <button class="connect-btn primary" onclick="pingBot()" style="background:#22c55e;">Ping Robot</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deploy Moves Section -->
+    <div class="connect-card" id="deploy-card" style="opacity:0.5; pointer-events:none;">
+      <h3>Deploy Moves to Robot</h3>
+      <div class="csub">Once connected, pick any trained move to send directly to your physical G1. The robot will perform it in real life.</div>
+      <div id="deploy-move-list" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      </div>
+    </div>
+
+    <!-- Tips Card -->
+    <div class="connect-card">
+      <h3>Before You Connect</h3>
+      <div class="csub" style="margin-bottom:0;">
+        <div style="display:flex;gap:12px;margin-bottom:14px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:#fef2f2;color:#e53e3e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">1</div>
+          <div><strong>Power on your G1</strong> — wait for the status LED to turn solid blue.</div>
+        </div>
+        <div style="display:flex;gap:12px;margin-bottom:14px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:#fef2f2;color:#e53e3e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">2</div>
+          <div><strong>Same network</strong> — make sure your computer and robot are on the same Wi-Fi or wired network.</div>
+        </div>
+        <div style="display:flex;gap:12px;margin-bottom:14px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:#fef2f2;color:#e53e3e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">3</div>
+          <div><strong>Clear the area</strong> — give the robot at least 2m of space in all directions before deploying moves.</div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:#fef2f2;color:#e53e3e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">4</div>
+          <div><strong>Stay nearby</strong> — always keep the emergency stop within arm's reach during physical deployment.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DISCS = [
+  {
+    title: 'Karate', subtitle: 'Basic Kata', icon: '🥊',
+    desc: 'Traditional Japanese martial art forms. Each kata is a sequence of blocks, punches, and kicks performed in a specific pattern.',
+    moves: [
+      { id:'h1', name:'Heian Shodan', sub:'First Form', desc:'Your very first kata. Stand strong, block low, step and punch. The foundation of everything.', moves:['Gedan Barai — Downward Block','Oi-Zuki — Stepping Punch','Jodan Uke — Rising Block','Gedan Barai — Turn & Block'], notes:'Big clear arm movements and straight stepping. Perfect starting point for G1 training.', steps:['Stand with feet together, hands at your sides. Bow. Open your feet to ready stance.','Turn left 90° into a front stance and throw a <strong>low block</strong> with your left arm — sweep it down!','Step forward and <strong>punch</strong> straight ahead with your right fist. Pull the left fist back to your hip.','Now spin 180° to the right into a right front stance with a right <strong>low block</strong>.','Step forward and punch with your left fist. Same idea, other side.','Turn left 90°, left front stance, left low block. Now walk forward with three <strong>rising blocks</strong> — sweep your arm up to protect your face each step.','At the end of the line, spin 270° to the left and low block again. This is the "big turn!"','Walk the pattern again: low block, punch, turn, low block, punch, turn.','The final line is three <strong>punches</strong> — step, punch, step, punch, step, punch!','Pull your feet back together, relax, and bow. You did it!'] },
+      { id:'h2', name:'Heian Nidan', sub:'Second Form', desc:'Side kicks and back fist strikes. Faster combos, new directions, more power.', moves:['Yoko-Geri — Side Kick','Uraken — Back Fist Strike','Shuto-Uke — Knife Block','Nukite — Spear Hand'], notes:'Side kicks push the G1\'s ±15° ankle roll. The robot adapts its balance strategy.', steps:['Stand tall with fists at your hips. Shift your weight onto one leg.','Lift your other knee up to the side, like you\'re stepping over a fence.','Snap your foot out sideways — that\'s a <strong>side kick</strong>! Pull it back fast.','For the <strong>back fist</strong>, whip your fist outward like you\'re flicking water off your hand.','Tighten your tummy the whole time — that\'s what keeps you balanced.','Try chaining them: kick, land, back fist. Boom boom!'] },
+      { id:'h3', name:'Heian Sandan', sub:'Third Form', desc:'Block and strike at the same time! Elbow attacks and the powerful horse stance.', moves:['Empi-Uchi — Elbow Strike','Fumikomi — Stomp Kick','Kiba-Dachi — Horse Stance','Morote-Uke — Double Block'], notes:'Deep horse stance tests the G1\'s 120 N·m knee motors.', steps:['Spread your feet wide and bend your knees — like sitting on an invisible horse. That\'s <strong>horse stance</strong>!','Your thighs should burn a little. Keep your back super straight.','Swing your elbow forward like you\'re nudging open a heavy door — that\'s an <strong>elbow strike</strong>.','For the <strong>stomp kick</strong>, lift your knee high and stamp your foot down hard.','Try the <strong>double block</strong>: both arms move at once, one blocks high, one blocks low.','Imagine you\'re a superhero who can\'t be pushed over. Stay low and strong!'] },
+      { id:'h4', name:'Heian Yondan', sub:'Fourth Form', desc:'Knee strikes and cross blocks. Flowing transitions between powerful finishing moves.', moves:['Juji-Uke — Cross Block','Hiza-Geri — Knee Strike','Mae-Geri — Front Kick','Kakiwake-Uke — Wedge Block'], notes:'Knee strikes stay within hip range. Great upper-body coordination challenge.', steps:['Cross your wrists in front of your face like an X — that\'s a <strong>cross block</strong>. It stops punches!','Now lift your knee straight up, fast and powerful — like marching in a parade but with attitude. That\'s a <strong>knee strike</strong>.','For the <strong>front kick</strong>, snap your foot forward from that raised knee. Aim with the ball of your foot.','The <strong>wedge block</strong> pushes both hands outward to open up space in front of you.','Try to flow from one move to the next without stopping — like a dance.','Each block sets up the next strike. Block, strike, block, strike!'] },
+      { id:'h5', name:'Heian Godan', sub:'Fifth Form', desc:'The ultimate Heian kata. Crescent kicks, flowing blocks, dramatic power.', moves:['Mikazuki-Geri — Crescent Kick','Manji-Uke — Flowing Block','Gedan-Juji — Low Cross Block','Oi-Zuki — Middle Punch'], notes:'Jump replaced with squat-to-rise — real jumping needs proprietary firmware.', steps:['For the <strong>crescent kick</strong>, swing your foot in a curve — like drawing a half-moon in the air.','The <strong>flowing block</strong> moves both arms at the same time: one goes high, one goes low.','Drop your crossed fists down low for the <strong>low cross block</strong> — protect your belly!','Step forward and punch at chest height. Drive the punch from your hip.','This is the boss level of basic karate — don\'t worry if it takes lots of practice.','Even black belts keep working on this one. You\'ve got this!'] },
+      { id:'tk', name:'Tekki Shodan', sub:'Iron Horse', desc:'All sideways in horse stance. Pure hip power and close-range fighting.', moves:['Kagi-Zuki — Hook Punch','Nami-Gaeshi — Wave Kick','Morote-Zuki — Double Punch','Empi-Uke — Elbow Block'], notes:'Pure lateral movement is perfect for G1 hip coordination testing.', steps:['Get into horse stance — feet wide, knees bent, back straight. You\'ll stay here the whole time!','This kata only moves sideways. No forward, no back.','For the <strong>hook punch</strong>, punch across your body like knocking on a door to your side.','The <strong>wave kick</strong> is a quick foot flip — lift your foot and snap it like kicking a ball off your ankle.','<strong>Double punch</strong>: throw both fists out at the same time, one high and one low.','Keep low and strong the whole time. Your legs will feel it — that means it\'s working!'] },
+    ]
+  },
+  {
+    title: 'Ballet', subtitle: 'Basics', icon: '🩰',
+    desc: 'Classical ballet positions and movements. Build grace, strength, and perfect body awareness.',
+    moves: [
+      { id:'b1', name:'Plié', sub:'Knee Bends', desc:'The foundation of all ballet. Bend your knees while keeping your back perfectly straight and tall.', moves:['Demi-Plié — Half Bend','Grand Plié — Full Bend','Relevé — Rise Up','Port de Bras — Arm Flow'], notes:'Controlled knee bends are ideal for G1. Relevé tests ankle motor precision.', steps:['Stand with your heels together and toes pointing outward like a duck.','Keep your back super straight — imagine a string pulling you up from your head.','Slowly bend your knees over your toes. Only go halfway down — that\'s a <strong>demi-plié</strong>.','Stand back up smoothly. Now try going all the way down — that\'s a <strong>grand plié</strong>.','To do a <strong>relevé</strong>, push through the balls of your feet and rise up on your toes. Balance!','Pretend the floor is hot lava — stay up as long as you can!'] },
+      { id:'b2', name:'Tendu', sub:'Foot Extensions', desc:'Slide your foot along the floor and point. Builds the precision and control every dancer needs.', moves:['Tendu Front — Slide Forward','Tendu Side — Slide Out','Tendu Back — Slide Behind','Close — Return Home'], notes:'Precise small movements test G1 joint accuracy (sub-degree encoders).', steps:['Stand straight with one foot planted firmly on the ground.','Slide your other foot forward along the floor until only your toes are touching.','Point your toes like you\'re drawing a line on the floor.','Slide it back to where you started. Nice and smooth!','Now try the same thing to the side, then behind you.','The secret: go super slow. No jerky moves — smooth like butter.'] },
+      { id:'b3', name:'Arabesque', sub:'Balance & Extension', desc:'Stand on one leg with the other stretched behind you. The most beautiful pose in dance.', moves:['Preparation — Weight Shift','Extension — Leg Behind','Arms — Long Lines','Hold — Balance'], notes:'Single-leg balance with extended limb is the ultimate G1 challenge.', steps:['Stand on one leg. Shift all your weight onto it.','Slowly lift your other leg straight behind you. Lean forward a little to balance.','Stretch one arm forward and keep the other to the side — like a bird about to take off!','Pick a spot on the wall to stare at. This stops the wobbling (really!).','Hold it! Breathe! Try to count to five.','Start with small lifts. Go higher as you get better each time.'] },
+      { id:'b4', name:'Port de Bras', sub:'Arm Positions', desc:'The five basic arm positions of ballet. Every movement flows through beautiful arm lines.', moves:['First — Rounded Low','Second — Open Wide','Third — One Up, One Side','Fifth — Crown Above'], notes:'Smooth arm trajectories showcase G1\'s 7-DOF arm coordination.', steps:['Hold your arms in a circle in front of your belly button — that\'s <strong>first position</strong>.','Open them wide to the sides like you\'re hugging a giant beach ball — <strong>second position</strong>.','One arm up, one to the side — that\'s <strong>third position</strong>.','Both arms above your head in a soft oval, like holding a crown — <strong>fifth position</strong>.','Now flow between them: first, second, third, fifth. Slowly and smoothly.','Imagine you\'re moving through water. Every movement should feel soft and graceful.'] },
+    ]
+  },
+  {
+    title: 'Calisthenics', subtitle: 'Basic Workout', icon: '🏋️',
+    desc: 'Bodyweight exercises that build real strength. No equipment, just your body and determination.',
+    moves: [
+      { id:'c1', name:'Squat', sub:'Legs & Core', desc:'Sit down and stand up. The king of all exercises. Builds your entire lower body.', moves:['Setup — Feet Apart','Lower — Hips Back','Bottom — Thighs Parallel','Drive — Push Through Heels'], notes:'Squats to 0.3–0.8m pelvis height are well-validated on real G1 hardware.', steps:['Stand with your feet as wide as your shoulders.','Stick your arms out in front for balance.','Sit down like there\'s an invisible chair behind you — push your butt back and bend your knees.','Go down until your thighs are flat like a table. Don\'t let your knees go past your toes!','Push through your heels to stand back up. Squeeze your butt at the top.','Try 5 in a row. If that\'s easy, go for 10!'] },
+      { id:'c2', name:'Lunge', sub:'Balance & Legs', desc:'Step forward and bend both knees. Builds single-leg strength and balance.', moves:['Step — Forward Stride','Lower — Both Knees Bend','Hold — 90° Angles','Return — Push Back'], notes:'Forward stepping with deep knee bend tests G1 dynamic balance.', steps:['Take a big step forward — like stepping over a puddle.','Bend both knees so they make an "L" shape.','Your front thigh should be flat. Your back knee should almost touch the floor.','Keep your chest up tall — don\'t lean forward!','Push through your front foot to stand back up.','Switch legs each time. Left, right, left, right!'] },
+      { id:'c3', name:'Push-Up Hold', sub:'Upper Body', desc:'Hold your body straight as a plank. Arms, chest, and core all working together.', moves:['Position — Hands Under Shoulders','Brace — Tighten Core','Hold — Straight Line','Breathe — Stay Steady'], notes:'Static holds are easier than dynamic movement for G1 stability.', steps:['Put your hands on the floor right under your shoulders.','Step your feet back so your body is straight like a board.','No saggy belly and no butt sticking up! Straight line from head to heels.','Squeeze your tummy muscles tight — like someone might tickle you.','Keep breathing! Don\'t hold your breath.','Start with 10 seconds. Try to add 5 more seconds each time you practice.'] },
+      { id:'c4', name:'Standing Reach', sub:'Flexibility', desc:'Reach your arms overhead and stretch as tall as you can. Simple but powerful.', moves:['Base — Stand Tall','Reach — Arms Up High','Side Bend — Left Then Right','Return — Arms Down'], notes:'Full arm extension showcases G1 shoulder range of motion.', steps:['Stand up straight with your feet together.','Reach your arms as high as you can — pretend you\'re trying to touch the ceiling!','Lace your fingers together up above your head.','Lean to one side like a palm tree in the wind. Feel the stretch along your side.','Now lean to the other side. Same stretch, same slow speed.','Breathe in when you reach up, breathe out when you lean.'] },
+      { id:'c5', name:'Leg Raise', sub:'Core Strength', desc:'Standing on one leg, raise the other out front. Pure balance and core control.', moves:['Balance — Shift Weight','Lift — Raise One Leg','Hold — Keep Steady','Lower — Controlled Return'], notes:'Single-leg standing with lift — similar balance challenge to martial arts kicks.', steps:['Stand on one leg. Hold your arms out to the sides — like a tightrope walker!','Slowly lift your other leg out in front of you. Keep it straight.','Tighten your tummy — that\'s what keeps you from falling.','Stare at one spot on the ground in front of you. Don\'t look around!','Hold for 5 seconds. Count out loud if it helps.','Lower your leg back down slowly — no dropping it! Then switch sides.'] },
+    ]
+  },
+  {
+    title: 'Yoga', subtitle: 'Basic Stretches', icon: '🧘',
+    desc: 'Ancient movement practice for flexibility, balance, and calm. Breathe deep and move slow.',
+    moves: [
+      { id:'y1', name:'Mountain Pose', sub:'Tadasana', desc:'Stand perfectly still and tall. Sounds easy, but true stillness takes focus and strength.', moves:['Feet — Ground Through All Four Corners','Legs — Engage Thighs','Spine — Lengthen Up','Arms — Relax at Sides'], notes:'Standing still with perfect posture is actually a great G1 baseline test.', steps:['Stand with your feet together. Arms relaxed by your sides.','Press all four corners of each foot into the ground — big toe, little toe, both sides of your heel.','Stand as tall as you can — like someone is pulling a string from the top of your head.','Relax your shoulders. Let them drop away from your ears.','Now close your eyes. Try not to wobble!','Harder than it looks, right? That\'s the whole point of this pose.'] },
+      { id:'y2', name:'Warrior I', sub:'Virabhadrasana I', desc:'A powerful lunge with arms reaching to the sky. Feel strong and grounded.', moves:['Lunge — Step Back Wide','Hips — Square Forward','Arms — Reach Up','Gaze — Look Up'], notes:'Deep lunge with raised arms tests G1 full-body coordination.', steps:['Step one foot way back behind you. Big step!','Bend your front knee like a lunge. Keep your back foot flat and angled outward.','Point your belly button straight ahead — that\'s called "squaring your hips."','Reach both arms up to the sky. Stretch tall!','Look up at your hands. You\'re a warrior!','You should feel strong and powerful — like a superhero landing pose.'] },
+      { id:'y3', name:'Warrior II', sub:'Virabhadrasana II', desc:'Arms wide open, legs strong and wide. You are a warrior facing the horizon.', moves:['Stance — Wide Legs','Arms — Extend Both Sides','Bend — Front Knee 90°','Gaze — Over Front Hand'], notes:'Wide stance with extended arms tests G1\'s lateral stability range.', steps:['Spread your legs wide — wider than you think!','Bend your front knee until your thigh is flat. Back leg stays straight.','Stretch both arms out to the sides like airplane wings.','Turn your head and look over your front hand — gaze at something far away.','Keep your shoulders relaxed and down. No scrunching!','Breathe slowly. Feel the warrior energy. Hold for 5 breaths.'] },
+      { id:'y4', name:'Tree Pose', sub:'Vrksasana', desc:'Balance on one leg with foot pressed against your inner thigh. Be a tree in the wind.', moves:['Root — Strong Standing Leg','Lift — Foot to Inner Thigh','Arms — Hands Together or Up','Breathe — Find Stillness'], notes:'Single-leg balance — similar challenge to arabesque and crane stance.', steps:['Stand on one leg. Feel strong and rooted to the ground.','Place the bottom of your other foot against your inner thigh (or calf — just not on your knee!).','Press your palms together in front of your chest.','Once balanced, try raising your hands above your head like tree branches.','Stare at one spot on the wall. This is the secret to not falling!','If you wobble, laugh and try again — even trees sway in the wind.'] },
+      { id:'y5', name:'Forward Fold', sub:'Uttanasana', desc:'Bend forward from the hips and let everything hang. Release tension from head to toe.', moves:['Hinge — Bend at Hips','Fold — Chest Toward Thighs','Release — Let Head Hang','Breathe — Relax Into It'], notes:'Tests G1 waist pitch limit (±30°). Motion is adapted for robot proportions.', steps:['Stand tall. Take a deep breath in.','Bend forward from your hips — not your back! Hinge like a door.','Let your arms and head hang like a rag doll. It\'s fine if you can\'t touch your toes!','Bend your knees a little if you need to. No shame in that.','Shake your head "yes" and "no" to relax your neck.','Take deep breaths. Feel yourself melt a little lower each time.'] },
+    ]
+  },
+  {
+    title: 'Creative Dance', subtitle: 'Community Routines', icon: '💃',
+    desc: 'Dance routines submitted by creators around the world. Upload any dance video and the robot learns it. New routines added by the community.',
+    moves: [
+      { id:'cd1', name:'Dance Routine No. 1', sub:'by LAFAN1 Motion Capture Lab', desc:'A smooth, flowing dance sequence captured with professional motion tracking. The robot learns every weight shift, arm swing, and step.', moves:['Opening Flow — Smooth Weight Shift','Side Step Combo — Rhythmic Stepping','Arm Expression — Upper Body Wave','Finish — Return to Center'], notes:'This routine was captured by the LAFAN1 dataset team using professional motion capture. Pre-trained and validated — the G1 performs this reliably.', live: true, steps:['Start with your feet shoulder-width apart, arms relaxed. Feel the rhythm in your body before you move.','Shift your weight slowly from one foot to the other — left, right, left, right. Let your whole body sway.','Now add a side step: step left, bring right foot in. Step right, bring left foot in. Keep it smooth!','Let your arms swing naturally as you step — like they\'re floating on water.','Try a <strong>body wave</strong>: start the movement from your chest, let it ripple down through your hips and knees.','Add your own style! There are no wrong moves in creative dance. The robot learned from the video — now you make it yours.'] },
+    ]
+  }
+];
+
+const QUIZ = [
+  { q:'What is the first karate kata you learn?', opts:['Tekki Shodan','Heian Shodan','Heian Godan','Bassai Dai'], ans:1 },
+  { q:'In ballet, what is a plié?', opts:['A jump','A spin','A knee bend','A toe point'], ans:2 },
+  { q:'How many joints does the Unitree G1 robot have?', opts:['19','23','29','43'], ans:2 },
+  { q:'What yoga pose means standing on one leg like a tree?', opts:['Mountain','Warrior','Tree Pose','Forward Fold'], ans:2 },
+  { q:'Why can\'t the robot jump like a human?', opts:['Too heavy','Needs special software','Legs too short','Would break'], ans:1 },
+  { q:'What is "Kiba-Dachi" in karate?', opts:['Front stance','Cat stance','Horse stance','Back stance'], ans:2 },
+  { q:'What exercise is called "the king of all exercises"?', opts:['Push-up','Lunge','Plank','Squat'], ans:3 },
+  { q:'What AI extracts 3D body poses from video?', opts:['ChatGPT','PromptHMR','DALL-E','Siri'], ans:1 },
+];
+
+let curDisc = null, curMove = null;
+let qIdx = 0, qScore = 0, qAns = {};
+
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach((a,i) => a.classList.toggle('active', (p==='learn'&&i===0)||(p==='pipeline'&&i===1)||(p==='connect'&&i===2)));
+  if (p === 'learn') backToDiscs();
+}
+
+function openDisc(i) {
+  curDisc = DISCS[i];
+  document.getElementById('hero').style.display = 'none';
+  document.getElementById('disc-grid').style.display = 'none';
+  document.getElementById('disc-detail').style.display = 'block';
+  document.getElementById('disc-title').textContent = curDisc.title;
+  document.getElementById('disc-subtitle').textContent = curDisc.subtitle;
+  document.getElementById('disc-desc').textContent = curDisc.desc;
+  document.getElementById('move-list').innerHTML = curDisc.moves.map(m => {
+    const liveBadge = m.live ? '<span style="display:inline-block;background:#22c55e;color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:8px;letter-spacing:0.5px;">LIVE</span>' : '';
+    const ms = getTrainState(m.id);
+    let statusDot;
+    if (m.live || ms.deployed) {
+      statusDot = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:#22c55e;font-weight:600;margin-top:8px;"><span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;"></span> Ready to play</span>';
+    } else if (ms.tI > 0 && ms.tI < 2000) {
+      statusDot = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:#f59e0b;font-weight:600;margin-top:8px;"><span style="width:6px;height:6px;border-radius:50%;background:#f59e0b;display:inline-block;animation:blink 1.5s infinite;"></span> Training... ' + Math.round(ms.tI/2000*100) + '%</span>';
+    } else if (ms.tI >= 2000) {
+      statusDot = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:#3b82f6;font-weight:600;margin-top:8px;"><span style="width:6px;height:6px;border-radius:50%;background:#3b82f6;display:inline-block;"></span> Policy ready — click to deploy</span>';
+    } else {
+      statusDot = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:#bbb;font-weight:500;margin-top:8px;"><span style="width:6px;height:6px;border-radius:50%;background:#ddd;display:inline-block;"></span> Click to train</span>';
+    }
+    return `<div class="disc-card" style="text-align:left; padding:20px; border:1px solid ${m.live ? '#dcfce7' : '#eee'}; ${m.live ? 'background:#fafff9;' : ''}" onclick="openMove('${m.id}')">
+      <h3 style="font-size:16px;">${m.name}${liveBadge}</h3>
+      <div style="font-size:12px; color:#e53e3e; margin:2px 0 6px;">${m.sub}</div>
+      <div style="font-size:12px; color:#999; line-height:1.5;">${m.desc.substring(0,80)}...</div>
+      ${statusDot}
+    </div>`;
+  }).join('') + `<div class="add-move-card" onclick="openAddMove()">
+      <div class="add-icon">+</div>
+      <span>Add New Move</span>
+    </div>`;
+}
+
+function openMove(id) {
+  curMove = null;
+  for (const d of DISCS) { const f = d.moves.find(x=>x.id===id); if(f){curMove=f;break;} }
+  if (!curMove) return;
+  document.getElementById('disc-detail').style.display = 'none';
+  document.getElementById('move-detail').style.display = 'block';
+  document.getElementById('m-name').textContent = curMove.name;
+  document.getElementById('m-sub').textContent = curMove.sub;
+  document.getElementById('m-desc').textContent = curMove.desc;
+  const stepsHtml = (curMove.steps || []).map((s,i) => `<div style="display:flex;gap:12px;margin-bottom:14px;"><div style="width:28px;height:28px;border-radius:50%;background:#e53e3e;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">${i+1}</div><div style="padding-top:4px;">${s}</div></div>`).join('');
+  document.getElementById('m-tips').innerHTML = stepsHtml;
+  document.getElementById('m-tips-box').style.display = (curMove.steps && curMove.steps.length) ? 'block' : 'none';
+  document.getElementById('m-notes').textContent = curMove.notes;
+  document.getElementById('m-moves').innerHTML = curMove.moves.map((m,i) =>
+    `<div class="move-item"><div class="num">${i+1}</div>${m}</div>`
+  ).join('');
+  const old = document.getElementById('sim-box').querySelector('iframe');
+  if (old) old.remove();
+  if (curMove.live) {
+    document.getElementById('sim-empty').style.display = 'none';
+    const iframe = document.createElement('iframe');
+    iframe.src = 'http://89.169.121.150:8080';
+    document.getElementById('sim-box').appendChild(iframe);
+    document.querySelector('.train-bar').style.display = 'none';
+  } else {
+    const s = getTrainState(curMove.id);
+    if (s.deployed) {
+      // Already deployed — show the sim iframe directly
+      document.getElementById('sim-empty').style.display = 'none';
+      const iframe = document.createElement('iframe');
+      iframe.src = 'http://89.169.121.150:8080';
+      document.getElementById('sim-box').appendChild(iframe);
+      document.querySelector('.train-bar').style.display = 'none';
+    } else {
+      document.getElementById('sim-empty').style.display = 'flex';
+      const nameEl = document.getElementById('sim-move-name');
+      if (nameEl) nameEl.textContent = curMove.name;
+      document.querySelector('.train-bar').style.display = 'flex';
+      const dBtn = document.getElementById('deploy-btn');
+      dBtn.classList.remove('show');
+      if (botConnected) { dBtn.innerHTML = 'Deploy to Robot &#9654;'; dBtn.onclick = deployToRobot; }
+      else { dBtn.innerHTML = 'Deploy to Sim &#9654;'; dBtn.onclick = deploySim; }
+      startTraining(curMove.id);
+    }
+  }
+}
+
+function backToMoves() {
+  document.getElementById('move-detail').style.display = 'none';
+  document.getElementById('disc-detail').style.display = 'block';
+}
+
+function backToDiscs() {
+  document.getElementById('hero').style.display = '';
+  document.getElementById('disc-grid').style.display = '';
+  document.getElementById('disc-detail').style.display = 'none';
+  document.getElementById('move-detail').style.display = 'none';
+}
+
+function toggleFullscreen() {
+  const box = document.getElementById('sim-box');
+  const expand = document.getElementById('fs-icon-expand');
+  const shrink = document.getElementById('fs-icon-shrink');
+  box.classList.toggle('fullscreen');
+  const isFs = box.classList.contains('fullscreen');
+  expand.style.display = isFs ? 'none' : 'block';
+  shrink.style.display = isFs ? 'block' : 'none';
+  if (isFs) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('sim-box').classList.contains('fullscreen')) {
+    toggleFullscreen();
+  }
+});
+
+function connectSim() {
+  document.getElementById('sim-empty').style.display = 'none';
+  const iframe = document.createElement('iframe');
+  iframe.src = 'http://89.169.121.150:8080';
+  document.getElementById('sim-box').appendChild(iframe);
+}
+
+function deploySim() {
+  if (curMove) {
+    const s = getTrainState(curMove.id);
+    s.deployed = true;
+    if (s.timer) { clearTimeout(s.timer); s.timer = null; }
+  }
+  document.getElementById('sim-empty').style.display = 'none';
+  const old = document.getElementById('sim-box').querySelector('iframe');
+  if (old) old.remove();
+  const iframe = document.createElement('iframe');
+  iframe.src = 'http://89.169.121.150:8080';
+  document.getElementById('sim-box').appendChild(iframe);
+  document.querySelector('.train-bar').style.display = 'none';
+}
+
+function renderQuiz() {
+  const q = QUIZ[qIdx], L = ['A','B','C','D'];
+  document.getElementById('q-pips').innerHTML = QUIZ.map((_,i) => `<div class="q-pip${i in qAns?' done':i===qIdx?' now':''}"></div>`).join('');
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('q-opts').innerHTML = q.opts.map((o,i) => {
+    let c = 'q-opt';
+    if (qIdx in qAns) { if (i===q.ans) c+=' correct'; else if (i===qAns[qIdx]) c+=' wrong'; }
+    return `<div class="${c}" onclick="qa(${i})"><div class="ltr">${L[i]}</div>${o}</div>`;
+  }).join('');
+  document.getElementById('q-score').textContent = qScore + ' / ' + Object.keys(qAns).length;
+}
+function qa(i) { if (qIdx in qAns) return; qAns[qIdx]=i; if (i===QUIZ[qIdx].ans) qScore++; renderQuiz(); }
+function qNext() { if (qIdx<QUIZ.length-1){qIdx++;renderQuiz();} }
+function qPrev() { if (qIdx>0){qIdx--;renderQuiz();} }
+
+const trainState = {}; // per-move training progress: { moveId: { tI, timer, deployed } }
+let activeTrain = null; // currently displayed move id
+
+function getTrainState(id) {
+  if (!trainState[id]) trainState[id] = { tI: 0, timer: null, deployed: false };
+  return trainState[id];
+}
+
+function tick() {
+  if (!activeTrain) return;
+  const s = getTrainState(activeTrain);
+  s.tI = Math.min(2000, s.tI + Math.floor(Math.random() * 80) + 40);
+  const p = Math.round(s.tI / 2000 * 100);
+  document.getElementById('t-fill').style.width = p + '%';
+  document.getElementById('t-pct').textContent = p + '%';
+  if (s.tI >= 2000) {
+    document.getElementById('t-text').textContent = 'Policy ready!';
+    document.getElementById('t-dot').classList.add('done');
+    document.getElementById('deploy-btn').classList.add('show');
+    s.timer = null;
+  } else {
+    document.getElementById('t-text').textContent = 'Training... ' + s.tI + '/2000';
+    s.timer = setTimeout(tick, 200);
+  }
+}
+
+function startTraining(id) {
+  activeTrain = id;
+  const s = getTrainState(id);
+  if (s.timer) clearTimeout(s.timer);
+  // Restore UI from saved state
+  const p = Math.round(s.tI / 2000 * 100);
+  document.getElementById('t-fill').style.width = p + '%';
+  document.getElementById('t-pct').textContent = p + '%';
+  if (s.tI >= 2000) {
+    document.getElementById('t-text').textContent = 'Policy ready!';
+    document.getElementById('t-dot').classList.add('done');
+    document.getElementById('deploy-btn').classList.add('show');
+  } else {
+    document.getElementById('t-text').textContent = 'Training... ' + s.tI + '/2000';
+    document.getElementById('t-dot').classList.remove('done');
+    document.getElementById('deploy-btn').classList.remove('show');
+    s.timer = setTimeout(tick, 200);
+  }
+}
+// --- Add New Move ---
+let mediaStream = null, mediaRecorder = null, recordedChunks = [];
+
+function openAddMove() {
+  document.getElementById('add-modal').classList.add('open');
+  document.getElementById('modal-choose').style.display = 'block';
+  document.getElementById('modal-upload').style.display = 'none';
+  document.getElementById('modal-record').style.display = 'none';
+}
+
+function closeAddMove() {
+  document.getElementById('add-modal').classList.remove('open');
+  stopCamera();
+}
+
+function showUpload() {
+  document.getElementById('modal-choose').style.display = 'none';
+  document.getElementById('modal-upload').style.display = 'block';
+}
+
+function showRecord() {
+  document.getElementById('modal-choose').style.display = 'none';
+  document.getElementById('modal-record').style.display = 'block';
+  startCamera();
+}
+
+async function startCamera() {
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    document.getElementById('cam-preview').srcObject = mediaStream;
+  } catch(e) { alert('Could not access camera. Please allow camera permissions.'); }
+}
+
+function stopCamera() {
+  if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+}
+
+function toggleRecord() {
+  const btn = document.getElementById('rec-btn');
+  const hint = document.getElementById('rec-hint');
+  if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(mediaStream);
+    mediaRecorder.ondataavailable = e => { if(e.data.size>0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = () => { submitMove('Recording'); };
+    mediaRecorder.start();
+    btn.classList.add('recording');
+    hint.textContent = 'Recording... tap to stop';
+  } else {
+    mediaRecorder.stop();
+    btn.classList.remove('recording');
+    hint.textContent = 'Processing...';
+  }
+}
+
+function handleVideoDrop(e) {
+  e.preventDefault();
+  const file = (e.dataTransfer?.files || e.target.files)[0];
+  if (file) submitMove(file.name);
+}
+
+function triggerFileSelect() {
+  document.getElementById('vid-input').click();
+}
+
+function submitMove(sourceName) {
+  closeAddMove();
+  const toast = document.getElementById('training-toast');
+  document.getElementById('toast-name').textContent = sourceName;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 6000);
+}
+
+// --- Connect Bot ---
+let botConnected = false;
+let botConnection = null;
+
+function connectBot() {
+  const ip = document.getElementById('bot-ip').value.trim();
+  const port = document.getElementById('bot-port').value.trim();
+  const protocol = document.getElementById('bot-protocol').value;
+  const name = document.getElementById('bot-name').value.trim() || 'My G1';
+
+  if (!ip) { document.getElementById('bot-ip').style.borderColor = '#e53e3e'; return; }
+
+  // Show connecting state
+  const dot = document.getElementById('bot-status-dot');
+  const text = document.getElementById('bot-status-text');
+  const detail = document.getElementById('bot-status-detail');
+  dot.className = 'status-dot connecting';
+  text.textContent = 'Connecting...';
+  detail.textContent = `Reaching ${protocol}://${ip}:${port}`;
+
+  // Simulate connection handshake
+  setTimeout(() => {
+    botConnected = true;
+    botConnection = { ip, port, protocol, name };
+
+    // Update status
+    dot.className = 'status-dot online';
+    text.textContent = 'Connected';
+    detail.textContent = `${name} is online and ready`;
+
+    // Update card
+    document.getElementById('bot-connect-card').classList.add('connected');
+    document.getElementById('connect-title').textContent = name;
+    document.getElementById('connect-sub').textContent = 'Your robot is connected and ready to receive moves.';
+
+    // Show connected state, hide form
+    document.getElementById('bot-connect-form').style.display = 'none';
+    document.getElementById('bot-connected-state').style.display = 'block';
+
+    // Fill info
+    document.getElementById('bi-name').textContent = name;
+    document.getElementById('bi-address').textContent = `${ip}:${port}`;
+    document.getElementById('bi-latency').textContent = Math.floor(Math.random() * 15 + 8) + ' ms';
+    document.getElementById('bi-battery').textContent = Math.floor(Math.random() * 30 + 65) + '%';
+
+    // Enable deploy section
+    const deployCard = document.getElementById('deploy-card');
+    deployCard.style.opacity = '1';
+    deployCard.style.pointerEvents = 'auto';
+    renderDeployMoves();
+
+    // Update the deploy button on the move detail page
+    const deployBtn = document.getElementById('deploy-btn');
+    if (deployBtn) {
+      deployBtn.innerHTML = 'Deploy to Robot &#9654;';
+      deployBtn.onclick = deployToRobot;
+    }
+  }, 1800);
+}
+
+function disconnectBot() {
+  botConnected = false;
+  botConnection = null;
+
+  // Reset status
+  document.getElementById('bot-status-dot').className = 'status-dot offline';
+  document.getElementById('bot-status-text').textContent = 'No robot connected';
+  document.getElementById('bot-status-detail').textContent = 'Enter connection details below';
+
+  // Reset card
+  document.getElementById('bot-connect-card').classList.remove('connected');
+  document.getElementById('connect-title').textContent = 'Connect Your Robot';
+  document.getElementById('connect-sub').textContent = "Enter your Unitree G1's network address to establish a connection. Make sure your robot is powered on and on the same network.";
+
+  // Show form, hide connected state
+  document.getElementById('bot-connect-form').style.display = 'flex';
+  document.getElementById('bot-connected-state').style.display = 'none';
+
+  // Disable deploy section
+  document.getElementById('deploy-card').style.opacity = '0.5';
+  document.getElementById('deploy-card').style.pointerEvents = 'none';
+
+  // Reset deploy button
+  const deployBtn = document.getElementById('deploy-btn');
+  if (deployBtn) {
+    deployBtn.innerHTML = 'Deploy to Sim &#9654;';
+    deployBtn.onclick = deploySim;
+  }
+}
+
+function pingBot() {
+  const latEl = document.getElementById('bi-latency');
+  latEl.textContent = '...';
+  setTimeout(() => {
+    latEl.textContent = Math.floor(Math.random() * 15 + 8) + ' ms';
+  }, 400);
+}
+
+function renderDeployMoves() {
+  const list = document.getElementById('deploy-move-list');
+  const allMoves = [];
+  DISCS.forEach(d => d.moves.forEach(m => allMoves.push({ ...m, disc: d.title })));
+  list.innerHTML = allMoves.map(m => {
+    const ready = m.live;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:${ready ? '#fafff9' : '#f9fafb'};border-radius:12px;border:1px solid ${ready ? '#dcfce7' : '#eee'};">
+      <div>
+        <div style="font-size:13px;font-weight:600;">${m.name}</div>
+        <div style="font-size:11px;color:#999;">${m.disc}</div>
+      </div>
+      <button onclick="deployMoveToBot('${m.id}','${m.name}')" style="padding:6px 14px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;${ready ? 'background:#22c55e;color:#fff;' : 'background:#eee;color:#999;'}" ${ready ? '' : 'disabled'}>
+        ${ready ? 'Deploy' : 'Not trained'}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function deployMoveToBot(moveId, moveName) {
+  if (!botConnected) return;
+  const toast = document.getElementById('training-toast');
+  document.getElementById('toast-name').textContent = moveName + '" to ' + botConnection.name;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+function deployToRobot() {
+  if (!botConnected || !curMove) return;
+  document.getElementById('sim-empty').style.display = 'none';
+  const old = document.getElementById('sim-box').querySelector('iframe');
+  if (old) old.remove();
+  const iframe = document.createElement('iframe');
+  iframe.src = `${botConnection.protocol === 'http' ? 'http' : 'http'}://${botConnection.ip}:${botConnection.port}`;
+  document.getElementById('sim-box').appendChild(iframe);
+  document.querySelector('.train-bar').style.display = 'none';
+
+  const toast = document.getElementById('training-toast');
+  document.getElementById('toast-name').textContent = curMove.name + '" deployed to ' + botConnection.name;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 4000);
+}
+</script>
+
+<!-- Add Move Modal -->
+<div class="modal-overlay" id="add-modal" onclick="if(event.target===this)closeAddMove()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeAddMove()">&times;</button>
+
+    <div id="modal-choose">
+      <h3>Add a New Move</h3>
+      <p class="modal-sub">MoveBot will learn the move and train your robot to teach it to you.</p>
+      <div class="modal-option" onclick="showUpload()">
+        <div class="mo-icon">&#127916;</div>
+        <div><h4>Upload a Video</h4><p>YouTube, TikTok, or any video from your device</p></div>
+      </div>
+      <div class="modal-option" onclick="showRecord()">
+        <div class="mo-icon">&#128247;</div>
+        <div><h4>Record Yourself</h4><p>Use your camera to perform the move live</p></div>
+      </div>
+    </div>
+
+    <div id="modal-upload" style="display:none;">
+      <h3>Upload a Video</h3>
+      <p class="modal-sub">Drop a video file or click to browse. We'll extract the moves automatically.</p>
+      <div class="upload-state">
+        <div class="drop-zone" onclick="triggerFileSelect()" ondrop="handleVideoDrop(event)" ondragover="event.preventDefault()">
+          <div class="up-icon">&#128228;</div>
+          <p><strong>Drop video here</strong> or click to browse</p>
+          <p style="font-size:11px;color:#bbb;margin-top:4px;">MP4, MOV, WebM up to 500MB</p>
+        </div>
+        <input type="file" id="vid-input" accept="video/*" style="display:none" onchange="handleVideoDrop(event)">
+      </div>
+    </div>
+
+    <div id="modal-record" style="display:none;">
+      <h3>Record a Move</h3>
+      <p class="modal-sub">Perform the move in front of your camera. We'll take it from there.</p>
+      <div class="record-state">
+        <video id="cam-preview" autoplay muted playsinline style="aspect-ratio:4/3;"></video>
+        <button class="record-btn" id="rec-btn" onclick="toggleRecord()"><div class="rec-dot"></div></button>
+        <div class="record-hint" id="rec-hint">Tap to start recording</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Training toast -->
+<div class="training-toast" id="training-toast">
+  <div class="toast-dot"></div>
+  <span>Training started for "<span id="toast-name"></span>" — your new move is on the way!</span>
+</div>
+
+</body>
+</html>
